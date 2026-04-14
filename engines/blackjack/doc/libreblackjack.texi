@@ -1,0 +1,1632 @@
+\input texinfo  @c -*-texinfo-*-
+@settitle Libre@ Blackjack
+@documentencoding UTF-8
+
+@setfilename blackjack.info
+@set UPDATED 2025-11-10
+@set VERSION 
+
+@copying
+This manual is for LibreBlackjack (version @value{VERSION}, @value{UPDATED}),
+which is a completely free-as-in-freedom blackjack engine designed to
+study and analyze the game statistics using different playing
+strategies, ranging from simple card counting up to other complex
+algorithms based on artificial-intelligence techniques.
+
+Copyright @copyright{} 2016-2025 Jeremy Theler.
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with no Front-Cover Texts, and with no Back-Cover
+Texts.  A copy of the license is included in the section entitled
+``GNU Free Documentation License''.
+@end quotation
+@end copying
+
+@ifnottex
+@paragraphindent 0
+@end ifnottex
+@titlepage
+@title Libre@ Blackjack
+@author Jeremy Theler
+2025-11-10
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@contents
+
+@node Top
+@top Libre@ Blackjack
+
+@menu
+* Overview::
+* Running @code{blackjack}::
+* Playing blackjack::
+* Configuration::
+* Internal players::
+* Examples::
+* Communication mechanisms::
+* Tests::
+* Statistical utilities::
+* Installation::
+@end menu
+
+@node Overview
+@chapter Overview
+@itemize
+@item
+Explain what the goal is.
+@item
+Show some examples.
+@item
+One directory (a.k.a. folder)
+@item
+1/2 Mhands/second
+@item
+Both free and open source so you get the four freedoms
+@enumerate 0
+@item
+run
+@item
+study
+@item
+change
+@item
+re-distribute
+@end enumerate
+
+@end itemize
+
+@quotation
+This manual is like an implicit equation.
+@end quotation
+
+@menu
+* Why::
+* How::
+* What::
+@end menu
+
+@node Why
+@section Why
+Since blackjack is not straightforward to analyze with analytical
+statistics equations, a monte-carlo-based approach is needed.
+
+@itemize
+@item
+compute evs and sds for different rules, decks and strategies
+@item
+study arranged shoes
+@item
+@dots{}
+@end itemize
+
+@node How
+@section How
+@itemize
+@item
+FOSS
+@item
+unix
+@end itemize
+
+@node What
+@section What
+a dealer (he) that knows how to deal blackjack, tells the player (her)
+what cards are dealt, asks the player for her choices (bet, hit, stand,
+etc.) and keeps track of the results so as to write a report with ev,
+sd, etc.
+
+@node Running @code{blackjack}
+@chapter Running @code{blackjack}
+
+@menu
+* Invocation::
+* Results::
+* Progress::
+* Interactive game::
+@end menu
+
+@node Invocation
+@section Invocation
+The @code{blackjack} program executable follows the POSIX standard. Its
+usage is:
+
+@verbatim
+blackjack [-c path_to_conf_file] [options] 
+@end verbatim
+
+@table @asis
+@item @code{-c<}@emph{path}@code{>} or @code{--conf=}@emph{path}
+
+Specify the path to the configuration file. Default is
+@code{./blackjack.conf}.
+
+@item @code{-n<}@math{n}@code{>} or @code{--hands=}@math{n}
+
+Specify the number of hands to play. Corresponds to the @code{hands}
+variable in the configuration file.
+
+@item @code{-d<}@math{n}@code{>} or @code{--decks=}@math{n}
+
+Specify the number of decks to use in the shoe. Corresponds to the
+@code{decks} variable in the configuration file.
+
+@item @code{-f} or @code{--flatbet}
+
+Do not ask for the amount to bet before starting a new hand and use a
+flat unit bet. Corresponds to the @code{flat_bet} variable in the
+configuration file.
+
+@item @code{-i} or @code{--internal}
+
+Use the internal player to play against the dealer. See the manual for
+details and instructions to define the rules and optionally, the playing
+strategy and/or arranged shoes.
+
+@item @code{-p} or @code{--progress}
+
+Show a progress bar when playing a fixed number of hands.
+
+@item @code{-h} or @code{--help}
+
+Print this informative help message into standard output and exit
+successfully.
+
+@item @code{-v} or @code{--version}
+
+Print the version number and licensing information into standard output
+and then exit successfully.
+
+@item @code{--}@emph{configuration_variable}@code{[=}@emph{value}@code{]}
+
+Any configuration variable from the configuration file can be set from
+the command line. For example, passing @code{--no_insurance} is like
+setting @code{no_insurance = 1} in the configuration file. Command-line
+options override setting in the configuration file.
+
+@end table
+
+If no configuration file is given, a file named @code{blackjack.conf} in
+the current directory is used, provided it exists. See the full
+documentation for the available options and the default values.
+
+Sec.@ 4 contains the details about the settings which can be used in the
+configuration file. As already stated, the options which can be given in
+the configuration file (explained in sec.@ 4) can be passed as a
+command-line argument following the POSIX double-dash format
+@code{--variable=value}. For example, running
+
+@verbatim
+blackjack --decks=4 --no_insurance=true
+@end verbatim
+
+is equivalent to using a configuration file with
+
+@verbatim
+decks = 4
+no_insurance = true
+@end verbatim
+
+Proper quotation migh be needed if the value contains spaces. For
+example,
+
+@verbatim
+blackjack --internal --cards="TH JS 6D"
+@end verbatim
+
+With no command-line options and no configuration file, @code{blackjack}
+starts in interactive mode and it is ready to start an ASCII blackjack
+game (see sec.@ 2.4).
+
+@node Results
+@section Results
+Before exiting, the program prints a summary of the results in YAML
+format:
+
+@verbatim
+---
+result: "(-0.8 ± 0.3)"
+rules: "ahc h17 das doa 3rsp 0decks"
+mean: -0.008237
+error: 0.00348378
+hands: 1e+06
+bankroll: -8237
+busts_player: 0.139315
+busts_dealer: 0.239251
+wins: 0.447443
+pushes: 0.086111
+losses: 0.495896
+total_money_waged: 1.13708e+06
+blackjacks_player: 0.047392
+blackjacks_dealer: 0.047318
+variance: 1.34853
+deviation: 1.16126
+...
+@end verbatim
+
+By default, the results are written in the standard error, as the
+standard output is typically used to send dealer's messages to the
+player. Therefore, if you are not using stdout (e.g.@ because you used
+the internal player @code{-i}) and want to use the results with Unix
+pipes, you have to redirect the standard error to the standard output:
+
+@verbatim
+$ blackjack -i 2>&1 | yq .
+{
+  "result": "(-0.8 ± 0.3)",
+  "rules": "ahc h17 das doa 3rsp 0decks",
+  "mean": -0.007579,
+  "error": 0.00348416,
+  "hands": 1000000.0,
+  "bankroll": -7579,
+  "busts_player": 0.139308,
+  "busts_dealer": 0.239262,
+  "wins": 0.447834,
+  "pushes": 0.085761,
+  "losses": 0.495561,
+  "total_money_waged": 1136900.0,
+  "blackjacks_player": 0.047427,
+  "blackjacks_dealer": 0.047433,
+  "variance": 1.34882,
+  "deviation": 1.16139
+}
+@end verbatim
+
+The YAML results can be written to a file by setting the variable
+@code{report} in the configuration file, where @code{stdout} is a valid
+file name. So the redirection above can be also performed as
+
+@verbatim
+$ blackjack -i --report=stdout | yq .
+{
+  "result": "(-0.9 ± 0.3)",
+  "rules": "ahc h17 das doa 3rsp 0decks",
+  "mean": -0.00889,
+  "error": 0.00348549,
+  "hands": 1000000.0,
+  "bankroll": -8890,
+  "busts_player": 0.139248,
+  "busts_dealer": 0.239346,
+  "wins": 0.447292,
+  "pushes": 0.085985,
+  "losses": 0.495988,
+  "total_money_waged": 1136880.0,
+  "blackjacks_player": 0.047253,
+  "blackjacks_dealer": 0.047674,
+  "variance": 1.34985,
+  "deviation": 1.16183
+}
+@end verbatim
+
+@node Progress
+@section Progress
+If the number of played hands exceeds a couple dozen million, one might
+want to track the progress. In that case, pass the option @code{-p} (or
+@code{--progress}) to get an ASCII progress bar in the standard error
+(remember standard output is used to play blackack).
+
+@verbatim
+$ blackjack -i --progress
+[==================>                               ] 36 %
+@end verbatim
+
+@node Interactive game
+@section Interactive game
+TBD
+
+If @code{blackjack} is attached to an interactive TTY (i.e.@ neither the
+standard input nor outputs are redirected) and there is no @code{player}
+option in the configuration file, an interactive game is triggered.
+First thing the program will do is to ask for a bet:
+
+@verbatim
+xxxxx
+@end verbatim
+
+So the user should enter a number, say ``1'' and then press Enter and
+then a game will be dealt:
+
+@verbatim
+xxxxx
+@end verbatim
+
+A flat-betting game can be played by passing @code{--flat_bet=true} (or
+@code{--flat_bet=2} to bet two units each hand) through the command
+line:
+
+@verbatim
+$ blackjack --flat_bet=true
+xxxxx
+@end verbatim
+
+The user can quit by either typing @code{quit} (or @code{q}) or hitting
+Ctrl-D. Write @code{help} or see sec.@ 3.2 for a description of all the
+possible commands the player can give to the dealer.
+
+@node Playing blackjack
+@chapter Playing blackjack
+@quotation
+I overhear a lot of bad gambling advice in the casinos. Perhaps the most
+frequent is this one, ``The object of blackjack is to get as close to 21
+as possible, without going over.'' No! The object of blackjack is to
+beat the dealer. To beat the dealer the player must first not bust (go
+over 21) and second either outscore the dealer or have the dealer bust.
+
+The Wizard of Odds,
+@url{https://wizardofodds.com/games/blackjack/basics/#rules}
+@end quotation
+Here are the basic Blackjack rules:
+
+@enumerate 
+@item
+Blackjack may be played with one to eight decks of 52-card decks.
+
+@item
+Aces may be counted as 1 or 11 points, 2 to 9 according to pip value,
+and tens and face cards count as ten points.
+
+@item
+The value of a hand is the sum of the point values of the individual
+cards. Except, a ``blackjack'' is the highest hand, consisting of an ace
+and any 10-point card, and it outranks all other 21-point hands.
+
+@item
+After the players have bet, the dealer will give two cards to each
+player and two cards to himself. One of the dealer cards is dealt face
+up. The facedown card is called the ``hole card.''
+
+@item
+If the dealer has an ace showing, he will offer a side bet called
+``insurance.'' This side wager pays 2 to 1 if the dealer's hole card is
+any 10-point card. Insurance wagers are optional and may not exceed half
+the original wager.
+
+@item
+If the dealer has a ten or an ace showing (after offering insurance with
+an ace showing), then he will peek at his facedown card to see if he has
+a blackjack. If he does, then he will turn it over immediately.
+
+@item
+If the dealer does have a blackjack, then all wagers (except insurance)
+will lose, unless the player also has a blackjack, which will result in
+a push. The dealer will resolve insurance wagers at this time.
+
+@item
+Play begins with the player to the dealer's left. The following are the
+choices available to the player:
+
+@table @asis
+@item Stand
+
+Player stands pat with his cards.
+
+@item Hit
+
+Player draws another card (and more if he wishes). If this card causes
+the player's total points to exceed 21 (known as ``breaking'' or
+``busting'') then he loses.
+
+@item Double
+
+Player doubles his bet and gets one, and only one, more card.
+
+@item Split
+
+If the player has a pair, or any two 10-point cards, then he may double
+his bet and separate his cards into two individual hands. The dealer
+will automatically give each card a second card. Then, the player may
+hit, stand, or double normally. However, when splitting aces, each ace
+gets only one card. Sometimes doubling after splitting is not allowed.
+If the player gets a ten and ace after splitting, then it counts as 21
+points, not a blackjack. Usually the player may keep re-splitting up to
+a total of four hands. Sometimes re-splitting aces is not allowed.
+
+@item Surrender
+
+The player forfeits half his wager, keeping the other half, and does not
+play out his hand. This option is only available on the initial two
+cards, and depending on casino rules, sometimes it is not allowed at
+all.
+
+@end table
+
+@item
+After each player has had his turn, the dealer will turn over his hole
+card. If the dealer has 16 or less, then he will draw another card. A
+special situation is when the dealer has an ace and any number of cards
+totaling six points (known as a ``soft 17''). At some tables, the dealer
+will also hit a soft 17.
+
+@item
+If the dealer goes over 21 points, then any player who didn't already
+bust will win.
+
+@item
+If the dealer does not bust, then the higher point total between the
+player and dealer will win.
+
+@item
+Winning wagers pay even money, except a winning player blackjack usually
+pays 3 to 2. Some casinos have been short-paying blackjacks, which is a
+rule strongly in the casino's favor.
+
+@end enumerate
+
+To perform monte-carlo simulations, in Libre@ Blackjack the dealer (he)
+and the player (she) can “talk” through commands which are ASCII strings
+sent through an inter-process communcation (IPC) mechanism. In the most
+basic case, an automated player reads messages from the dealer from
+@code{blackjack}'s standard output and writes her ASCII commands into
+the dealer's standard input.
+
+@menu
+* Messages from the dealer to the player::
+* Commands from the player to the dealer::
+@end menu
+
+@node Messages from the dealer to the player
+@section Messages from the dealer to the player
+@itemize
+@item
+Messages are ASCII-formatted string composed of tokens separated by
+spaces.
+@item
+Each message starts with a single token which is either a single English
+word (e.g.@ @code{bet} or @code{play}) or more than one English words
+concatenated using a low hyphen @code{_} (e.g.@ @code{new_hand} or
+@code{player_card}). That is to say, the first token of the message is a
+single-token string.
+@item
+The first token might or might not end with a question mark @code{?}
+(e.g.@ @code{card_player 4H} or @code{play? 18 4}):
+@itemize
+@item
+Messages with tokens that do not end in a question mark @code{?} are
+informative and do not need any response from the player.
+@item
+Interrogative messages strating with tokens than end in a question mark
+@code{?} need to be answered by the player. That is to say, after
+issuing a message as a question the dealer starts listening to the
+proper communication channel (see sec.@ 7) for a valid command from the
+dealer (detailed in sec.@ 3.2).
+@end itemize
+
+@item
+A message might have extra tokens that convey information to the player,
+e.g.@ @code{new_hand 15141 -4587.5}, @code{card_player 9S},
+@code{play? 16 10}.
+@item
+All numerical values such as hand totals or bankrolls are given as
+decimal ASCII strings.
+@end itemize
+
+@menu
+* Interrogative messages::
+* Informative messages::
+@end menu
+
+@node Interrogative messages
+@subsection Interrogative messages
+These messages have to answered by the user. If an invalid answer is
+received, an informative message (sec.@ 3.1.2) with a complain will be
+sent and then the same interrogative message will be re-sent.
+
+@itemize
+@item
+@code{bet?} (sec.@ 3.1.1.1)
+@item
+@code{insurance?} (sec.@ 3.1.1.2)
+@item
+@code{play?} (sec.@ 3.1.1.3)
+@end itemize
+
+@menu
+* @code{bet?}::
+* @code{insurance?}::
+* @code{play?} @math{p} @math{d}::
+@end menu
+
+@node @code{bet?}
+@subsubsection @code{bet?}
+The dealer asks the user the amount to wage in the hand that is about to
+start. The player should send a positive integer in response. first hand
+has an id equal to one so @math{k>1} when splitting).
+
+@strong{Examples}
+
+@verbatim
+bet?
+@end verbatim
+
+@node @code{insurance?}
+@subsubsection @code{insurance?}
+The dealer asks the user if she wants to insure her hand when the
+dealer's upcards is an ace. This message is only sent if
+@code{no_insurance} and @code{always_insure} are both false. The player
+should answer either @code{yes} (or @code{y}) or @code{no} (or
+@code{n}).
+
+@strong{Examples}
+
+@verbatim
+insurance?
+@end verbatim
+
+@node @code{play?} @math{p} @math{d}
+@subsubsection @code{play?} @math{p} @math{d}
+The dealer asks the user to play, i.e.@ to choose wether to
+
+@itemize
+@item
+@code{pair} (or @code{p}) or @code{split}
+@item
+@code{double} (or @code{d})
+@item
+@code{hit} (or @code{h})
+@item
+@code{stand} (or @code{s})
+@item
+@code{quit} (or @code{q})
+@end itemize
+
+given that the value of the player's hand id @math{p} and that the value
+of the dealer's hand is @math{d}, where @math{p} and @math{d} are
+integers. If @math{p} is negative, the hand is soft with a value equal
+to @math{|p|}.
+
+@strong{Examples}
+
+@verbatim
+play? 17 10
+play? 20 10
+play? -17 3
+play? -19 7
+play? 16 10
+play? -16 10
+play? 16 5
+play? 7 7
+@end verbatim
+
+@node Informative messages
+@subsection Informative messages
+For basic players, all of the informative messages listed in this
+section can be ignored. For advanced players, almost all of the messages
+can be ignored.
+
+@itemize
+@item
+@code{bet_maximum} (sec.@ 3.1.2.1)
+@item
+@code{bet_negative} (sec.@ 3.1.2.2)
+@item
+@code{bet_zero} (sec.@ 3.1.2.3)
+@item
+@code{card_dealer} (sec.@ 3.1.2.4)
+@item
+@code{card_dealer_hole} (sec.@ 3.1.2.5)
+@item
+@code{card_dealer_up} (sec.@ 3.1.2.6)
+@item
+@code{card_player} (sec.@ 3.1.2.7)
+@item
+@code{dealer_blackjack} (sec.@ 3.1.2.8)
+@item
+@code{new_hand} (sec.@ 3.1.2.9)
+@item
+@code{player_blackjack_also} (sec.@ 3.1.2.10)
+@item
+@code{player_double_invalid} (sec.@ 3.1.2.11)
+@item
+@code{player_split_invalid} (sec.@ 3.1.2.12)
+@item
+@code{player_split_ok} (sec.@ 3.1.2.13)
+@item
+@code{player_wins_insurance} (sec.@ 3.1.2.14)
+@item
+@code{shuffling} (sec.@ 3.1.2.15)
+@end itemize
+
+@menu
+* @code{bet_maximum}::
+* @code{bet_negative}::
+* @code{bet_zero}::
+* @code{card_dealer} @math{rs}::
+* @code{card_dealer_hole} @math{rs}::
+* @code{card_dealer_up} @math{rs}::
+* @code{card_player} @math{rs} @code{[} @math{h} @code{]}::
+* @code{dealer_blackjack}::
+* @code{new_hand} @math{n} @math{b}::
+* @code{player_blackjack_also}::
+* @code{player_double_invalid}::
+* @code{player_split_invalid}::
+* @code{player_split_ok} @math{k}::
+* @code{player_wins_insurance}::
+* @code{shuffling}::
+@end menu
+
+@node @code{bet_maximum}
+@subsubsection @code{bet_maximum}
+The dealer complains that the bet the placer placed is invalid. The bet
+is larger than the maximum wager allowed by @code{maximum_bet}. The
+player will receive a new @code{bet?} message.
+
+@strong{Examples}
+
+@verbatim
+bet_maximum
+@end verbatim
+
+@node @code{bet_negative}
+@subsubsection @code{bet_negative}
+The dealer complains that the bet the placer placed is invalid. Only
+positive integer numbers are allowed. The player will receive a new
+@code{bet?} message.
+
+@strong{Examples}
+
+@verbatim
+bet_negative
+@end verbatim
+
+@node @code{bet_zero}
+@subsubsection @code{bet_zero}
+The dealer complains that the bet the placer placed is invalid. Only
+positive integer numbers are allowed. The player will receive a new
+@code{bet?} message.
+
+@strong{Examples}
+
+@verbatim
+bet_zero
+@end verbatim
+
+@node @code{card_dealer} @math{rs}
+@subsubsection @code{card_dealer} @math{rs}
+The dealer informs that the dealer has been dealt a card. The card is
+given as the two-character ASCII representation discussed in
+sec.@ 3.1.2.7.
+
+@strong{Examples}
+
+@verbatim
+card_dealer TH
+card_dealer JC
+card_dealer 5D
+card_dealer 5H
+card_dealer QH
+@end verbatim
+
+@node @code{card_dealer_hole} @math{rs}
+@subsubsection @code{card_dealer_hole} @math{rs}
+The dealer informs what his hole card is. This message is issued only if
+playing the american rules, i.e. with @code{enhc = false} or
+@code{ahc = true}. The card is given as the two-character ASCII
+representation discussed in sec.@ 3.1.2.7.
+
+@strong{Examples}
+
+@verbatim
+card_dealer_hole KH
+card_dealer_hole AC
+card_dealer_hole 4H
+card_dealer_hole 5D
+card_dealer_hole 7H
+@end verbatim
+
+@node @code{card_dealer_up} @math{rs}
+@subsubsection @code{card_dealer_up} @math{rs}
+The dealer informs that the dealer has been dealt the up card (i.e. the
+first card facing up). This message is issued only once per hand. The
+card is given as the two-character ASCII representation discussed in
+sec.@ 3.1.2.7.
+
+@strong{Examples}
+
+@verbatim
+card_dealer_up KD
+card_dealer_up 7H
+card_dealer_up KH
+card_dealer_up QD
+card_dealer_up 6C
+@end verbatim
+
+@node @code{card_player} @math{rs} @code{[} @math{h} @code{]}
+@subsubsection @code{card_player} @math{rs} @code{[} @math{h} @code{]}
+The dealer informs that the player has been dealt a card. The card is
+given as a two-character ASCII representation where the first
+character@ @math{r} indicates the rank and the second
+character@ @math{s} gives the suit.
+
+@float Table
+@multitable {Character} {Queen} 
+@headitem 
+Character
+ @tab Rank
+@item 
+@code{A}
+ @tab Ace
+@item 
+@code{2}
+ @tab Deuce
+@item 
+@code{3}
+ @tab Three
+@item 
+@code{4}
+ @tab Four
+@item 
+@code{5}
+ @tab Five
+@item 
+@code{6}
+ @tab Six
+@item 
+@code{7}
+ @tab Seven
+@item 
+@code{8}
+ @tab Eight
+@item 
+@code{9}
+ @tab Nine
+@item 
+@code{T}
+ @tab Ten
+@item 
+@code{J}
+ @tab Jack
+@item 
+@code{Q}
+ @tab Queen
+@item 
+@code{J}
+ @tab King
+@end multitable
+@caption{Table 1: Rank (first) character of a card}
+@end float
+@float Table
+@multitable {Character} {♦ Diamonds} 
+@headitem 
+Character
+ @tab Suit
+@item 
+@code{C}
+ @tab ♣ Clubs
+@item 
+@code{D}
+ @tab ♦ Diamonds
+@item 
+@code{H}
+ @tab ♥ Hearts
+@item 
+@code{S}
+ @tab ♠ Spades
+@end multitable
+@caption{Table 2: Suit (second) character of a card}
+@end float
+The optional argument@ @math{h} indicates the id of the player's hand
+being dealt. If it not present, that means the base hand. When
+performing a splitting on the base hand, the original hand has id equal
+to zero and the new hand has id equal to one. Subsequent splits trigger
+new hands with sequential ids.
+
+@strong{Examples}
+
+@verbatim
+card_player 9C 
+card_player JD 
+card_player QC
+card_player KS
+card_player TD 1
+card_player 6H 2 
+@end verbatim
+
+@node @code{dealer_blackjack}
+@subsubsection @code{dealer_blackjack}
+The dealer informs that he has blackjack.
+
+@strong{Examples}
+
+@verbatim
+dealer_blackjack
+@end verbatim
+
+@node @code{new_hand} @math{n} @math{b}
+@subsubsection @code{new_hand} @math{n} @math{b}
+The dealer states that a new hand is starting. The integer@ @math{n}
+gives the number of the hand that is about to start (first hand is
+@math{n=1}). The decimal number@ @math{b} states the player's bankroll
+before placing the bet in the hand that is about to start. Even though
+bets have to be integers, pay offs might be non-integer such as when
+winning a natural (e.g.@ @math{3/2 = 1.5} or @math{6/5} = 1.2).
+
+@strong{Examples}
+
+@verbatim
+new_hand 1 0
+new_hand 22 -8
+new_hand 24998 -7609.5
+@end verbatim
+
+@node @code{player_blackjack_also}
+@subsubsection @code{player_blackjack_also}
+The dealer informs that both he and the user have blackjack.
+
+@strong{Examples}
+
+@verbatim
+player_blackjack_also
+@end verbatim
+
+@node @code{player_double_invalid}
+@subsubsection @code{player_double_invalid}
+The dealer complains that the doubling-down request cannot be fulfilled.
+Doubling down is only possible when exactly two cards have been dealt in
+a hand and the @code{doa} or @code{do9} option is met. The player will
+receive a new @code{play?} message.
+
+@strong{Examples}
+
+@verbatim
+player_double_invalid
+@end verbatim
+
+@node @code{player_split_invalid}
+@subsubsection @code{player_split_invalid}
+The dealer complains that the split request cannot be fulfilled.
+Splitting is only possible when exactly two cards with the same rank
+have been dealt in a hand. The player will receive a new @code{play?}
+message.
+
+@strong{Examples}
+
+@verbatim
+player_split_invalid
+@end verbatim
+
+@node @code{player_split_ok} @math{k}
+@subsubsection @code{player_split_ok} @math{k}
+The dealer informs that the split request was successfully be fulfilled.
+The integer @math{k} indicates the id of the split hand (the first hand
+has an id equal to one so @math{k>1} when splitting).
+
+@strong{Examples}
+
+@verbatim
+player_split_ok 2
+player_split_ok 3
+@end verbatim
+
+@node @code{player_wins_insurance}
+@subsubsection @code{player_wins_insurance}
+The dealer informs that the user won the insurance.
+
+@strong{Examples}
+
+@verbatim
+player_wins_insurance
+@end verbatim
+
+@node @code{shuffling}
+@subsubsection @code{shuffling}
+The dealer informs that he is shuffling the decks. This only happens
+when a non-zero value for the option @code{decks} is set. If
+@code{decks = 0} (or the command-line option @code{-d0} is passed), then
+cards are drawn randomnly from an infinite set of cards and there is no
+need to shuffle.
+
+@strong{Examples}
+
+@verbatim
+shuffling
+@end verbatim
+
+@node Commands from the player to the dealer
+@section Commands from the player to the dealer
+TBD
+
+The following commands are available for the player for playing her
+hand.
+
+The following are general commands in the sense that they can be sent
+from the player to the dealer at any moment of the game.
+
+@node Configuration
+@chapter Configuration
+Libre@ Blackjacks reads a configuration file that contains
+
+@itemize
+@item
+settings about the rules of the game
+@itemize
+@item
+number of decks,
+@item
+whether if the dealer has to hit soft seventeen or not,
+@item
+blackjack payout,
+@item
+maximum bet allowed,
+@item
+etc@dots{}
+@end itemize
+
+@item
+how the player is supposed to play
+@itemize
+@item
+number of hands
+@item
+whether a flat or variable bet is going to be used,
+@item
+etc@dots{}
+@end itemize
+
+@item
+if there are any particular shoe arrangement, i.e.@ a predefined set of
+cards dealt in a certain order for instance to play one million hands of
+a sixteen against a dealer's ten
+@item
+what kind of information is shown in the interactive session
+@itemize
+@item
+if ASCII-art cards are supposed to be shown,
+@item
+a real-time delay to make the game smoother,
+@item
+etc.
+@end itemize
+
+@item
+how the automated player communicates with the dealer
+@itemize
+@item
+using standard input/output,
+@item
+FIFO named pipes,
+@item
+POSIX message queues,
+@item
+POSIX shared memory,
+@item
+etc@dots{}
+@end itemize
+
+@end itemize
+
+The location of the configuration file can be given in the command line.
+If none is provided, a file named @code{blackjack.conf} in the current
+directory is used. If such file does not exists, the defaults values of
+each variable are used.
+
+@quotation
+It is thus recommended to run each monte-carlo simulation that needs a
+particular configuration---and possibly other files such as card
+arrangements, strategies and/or results---in a different directory
+(a.k.a. folder) with a @code{blackjack.conf} file in it.
+@end quotation
+Individual variables can be set from the command line by passing one or
+more times the option @code{--configuration_variable[=value]} as
+explained in sec.@ 2.1.
+
+Comments can be inserted using either a hash @code{#} or a colon
+@code{;} at any position in the line. The following configuration file
+is the default provided in the main distribution tarball:
+
+@verbatim
+# uncomment the following line to arrange cards
+# arranged_cards = AC 5H 8S 9D KH
+
+flat_bet = true       # do not ask for bets
+no_insurance = true   # do not ask for insurance
+decks = 1             # number of decks, negative means infinite
+@end verbatim
+
+@menu
+* Reference::
+@end menu
+
+@node Reference
+@section Reference
+@itemize
+@item
+@code{blackjack_pays} (sec.@ 4.1.1)
+@item
+@code{cards} (sec.@ 4.1.2)
+@item
+@code{cards_file} (sec.@ 4.1.3)
+@item
+@code{dealer} (sec.@ 4.1.4)
+@item
+@code{dealer_draws_even_if_player_busted} (sec.@ 4.1.5)
+@item
+@code{decks} (sec.@ 4.1.6)
+@item
+@code{flat_bet} (sec.@ 4.1.7)
+@item
+@code{hands} (sec.@ 4.1.8)
+@item
+@code{maximum_bet} (sec.@ 4.1.9)
+@item
+@code{max_incorrect_commands} (sec.@ 4.1.10)
+@item
+@code{new_hand_reset_cards} (sec.@ 4.1.11)
+@item
+@code{no_insurance} (sec.@ 4.1.12)
+@item
+@code{number_of_burnt_cards} (sec.@ 4.1.13)
+@item
+@code{penetration} (sec.@ 4.1.14)
+@item
+@code{penetration_sigma} (sec.@ 4.1.15)
+@item
+@code{player} (sec.@ 4.1.16)
+@item
+@code{quit_when_arranged_cards_run_out} (sec.@ 4.1.17)
+@item
+@code{resplits} (sec.@ 4.1.18)
+@item
+@code{rng_seed} (sec.@ 4.1.19)
+@item
+@code{rules} (sec.@ 4.1.20)
+@item
+@code{shuffle_every_hand} (sec.@ 4.1.21)
+@end itemize
+
+@menu
+* @code{blackjack_pays =} @math{r}::
+* @code{cards =} @math{\text{list of cards}}::
+* @code{cards_file =} @math{\text{path to file}}::
+* @code{dealer =} @emph{game}::
+* @code{dealer_draws_even_if_player_busted =} @math{b}::
+* @code{decks =} @math{n}::
+* @code{flat_bet =} @math{b}::
+* @code{hands =} @math{n}::
+* @code{maximum_bet =} @math{n}::
+* @code{max_incorrect_commands =} @math{n}::
+* @code{new_hand_reset_cards_out =} @math{b}::
+* @code{no_insurance =} @math{b}::
+* @code{number_of_burnt_cards =} @math{n}::
+* @code{penetration =} @math{r}::
+* @code{penetration_sigma =} @math{r}::
+* @code{player =} @emph{player}::
+* @code{quit_when_arranged_cards_run_out =} @math{b}::
+* @code{resplits =} @math{n}::
+* @code{rng_seed =} @math{n}::
+* @code{rules = [ ahc | enhc ] [ h17 | s17 ] [ das | ndas ] [ doa | do9 ]}::
+* @code{shuffle_every_hand =} @math{b}::
+@end menu
+
+@node @code{blackjack_pays =} @math{r}
+@subsection @code{blackjack_pays =} @math{r}
+Defines how much a natural pays. The real number @math{r} has to be a
+decimal number such as @code{1.5} or @code{1.2}.
+
+@strong{Default} @math{1.5}
+
+@strong{Examples}
+
+@verbatim
+blackjack_pays = 1.5
+blackjack_pays = 1.2
+@end verbatim
+
+@node @code{cards =} @math{\text{list of cards}}
+@subsection @code{cards =} @math{\text{list of cards}}
+If this option is given, the dealer draws the cards specified on the
+list. In the first hand, the order of the dealt cards
+
+@enumerate 
+@item
+Player's first card
+@item
+Dealer's first card
+@item
+Player's second card
+@item
+@dots{}
+@end enumerate
+
+where the ellipsis dots indicate continuation of the game
+(i.e.@ dealer's hole card for @code{ahc} or player's hit card for
+`enhc).
+
+These cards will be the ones specified on the list in the prescribed
+order. Each card is given by a two-character string, explained in
+tbl.@ 1 and tbl.@ 2 respectively. Cards should be separated by spaces.
+
+The dealer will continue drawing from the list of arranged cards until
+either
+
+@enumerate a
+@item
+there are no more cards in the list, in which case the dealer will
+continue drawing cards from either i. a shoe with the already-dealt
+cards removed, if @code{decks} is non-zero, or ii. a set of infinite
+cards , if @code{decks} is zero.
+@item
+the hand is over and @code{new_hand_reset_cards} is @code{true}, or
+@item
+@code{quit_when_arranged_cards_run_out} is true, in which case the
+program exits.
+@end enumerate
+
+A zero or @code{XX} means a placeholder for an actual random card. So
+for example @code{JS XX AC} will give the Jack of Spades, a random card
+and te Ace of Clubs.
+
+@strong{Default} Empty list
+
+@strong{Examples}
+
+@verbatim
+cards = TH JD 6C
+cards = 2S XX QS AC
+cards = 8D QH XX 2C KD 7S XX TD AH 5C
+@end verbatim
+
+@node @code{cards_file =} @math{\text{path to file}}
+@subsection @code{cards_file =} @math{\text{path to file}}
+This option is exactly the same as @code{cards} but the cards are given
+in a text file instead of directly in the configuration file.
+
+@strong{Default} No path
+
+@strong{Examples}
+
+@verbatim
+cards_file = cards.txt
+cards_file = ../arranged_cards.txt
+cards = /var/games/cards.txt
+@end verbatim
+
+@node @code{dealer =} @emph{game}
+@subsection @code{dealer =} @emph{game}
+Defines the game the dealer will deal. Currently, the only valid choice
+is @code{blackjack}.
+
+@strong{Default} @code{blackjack}
+
+@strong{Examples}
+
+@verbatim
+dealer = blackjack
+@end verbatim
+
+@node @code{dealer_draws_even_if_player_busted =} @math{b}
+@subsection @code{dealer_draws_even_if_player_busted =} @math{b}
+The usual rule in casinos is that if all player busted all hands
+(including split hands), the dealer does not have to draw until sixteen
+(or soft seventeen) but the hand is finihsed and the next card in the
+shoe (or shuffler) is the player's first card of the next hand. Yet,
+this rule may distort some statistics such as dealer's bust rate because
+for sure he will not bust that hand. This flag can modify the dealer's
+behavior and, if true, the dealer will draw cards as normal even if the
+player had busted all her hands.
+
+@strong{Default} @code{false}
+
+@strong{Examples}
+
+@verbatim
+dealer_draws_even_if_player_busted = false
+dealer_draws_even_if_player_busted = true
+@end verbatim
+
+@node @code{decks =} @math{n}
+@subsection @code{decks =} @math{n}
+Sets the number of decks used in the game. If @math{n} is zero, the
+program draws cards from an infinte set. For a finite @math{n}, the
+cards are drawn from a shoe.
+
+@strong{Default} @math{0}
+
+@strong{Examples}
+
+@verbatim
+decks = 1
+decks = 2
+decks = 8
+@end verbatim
+
+@node @code{flat_bet =} @math{b}
+@subsection @code{flat_bet =} @math{b}
+Tells both the dealer and the player that the betting scheme is flat or
+not. The dealer will not ask for bets and the internal player, if asked,
+always says @code{1}. The value can be either @code{false} or
+@code{true} or @code{0} or @code{1}.
+
+@strong{Default} @math{false}
+
+@strong{Examples}
+
+@verbatim
+flat_bet = false
+flat_bet = true
+flat_bet = 1
+@end verbatim
+
+@node @code{hands =} @math{n}
+@subsection @code{hands =} @math{n}
+Sets the number of hands to play before quiting. If @math{n} is zero,
+the program keeps playing until it receives the command @code{quit}.
+Otherwise it plays @math{n} hands and quits. This parameter can be set
+on the command line with the option @code{-n}@math{n} or
+@code{--hands=}@math{n}.
+
+@strong{Default} @math{0}
+
+@strong{Examples}
+
+@verbatim
+hands = 1
+hands = 1000000
+hands = 1e6
+@end verbatim
+
+@node @code{maximum_bet =} @math{n}
+@subsection @code{maximum_bet =} @math{n}
+Sets a limit on the size of the bet. If a bet larger than the limit is
+placed, the dealer answers @code{bet_maximum} and asks again. A value of
+0 means no limit. This is only useful when modeling variable-betting
+schemes.
+
+@strong{Default} @math{0}
+
+@strong{Examples}
+
+@verbatim
+maximum_bet = 0
+maximum_bet = 1
+maximum_bet = 20
+@end verbatim
+
+@node @code{max_incorrect_commands =} @math{n}
+@subsection @code{max_incorrect_commands =} @math{n}
+Tells the dealer how many consecutive incorrect or invalid commands to
+accept before quitting. A finite value of @math{n} avoids infinite loops
+where the player sends commands that do not make sense (such as garbage)
+or that are not valid (such as doubling when not allowed).
+
+@strong{Default} 10
+
+@strong{Examples}
+
+@verbatim
+max_incorrect_commands = 20
+@end verbatim
+
+@node @code{new_hand_reset_cards_out =} @math{b}
+@subsection @code{new_hand_reset_cards_out =} @math{b}
+If the are arranged cards (either with @code{cards} or
+@code{cards_file}) and @math{b} is @code{true} then when a hand is
+finished, the next hand starts with the arranged cards from the very
+beginning. Otherwise, if there are enough arranged cards, they will be
+drawn from the list in the specified order. If there are no more cards
+in the arranged list, cards will be drawn from a randomnly-shuffled shoe
+or from an infinite set of random cards, depending on the value of
+@code{decks}. This setting only makes sense when arranging cards with
+either @code{cards} or @code{cards_file}.
+
+A usage for @math{b = \text{true}} is to give just three cards in
+@code{cards} (say the dealer upcard and the two player's cards) to study
+what happens randonly after this intial condition. In this scenario, all
+hands will start with the three prescribed cards and the rest of the
+hand will be random, either from a shoe with the three already-dealt
+cards missing or from an infinite set of cards.
+
+A usage for @math{b = \text{false}} is to study what happens when the
+same shoe is played under different circunstances. In this case, the
+program should be run several times with the same arranged cards (most
+likely using @code{cards_file} because there are expected a lot of cards
+to be arranged) and different hitting/standing strategies to compare
+outcomes. If the actual dealt cards are not important but only
+reproducibility, it is easier to fix @code{rng_seed}.
+
+@strong{Default} @code{true}
+
+@strong{Examples}
+
+@verbatim
+new_hand_reset_cards = false
+new_hand_reset_cards = true
+@end verbatim
+
+@node @code{no_insurance =} @math{b}
+@subsection @code{no_insurance =} @math{b}
+If @math{b} is @code{true}, the dealer will not ask for insurance and
+assume the player will never take it when the dealer shows an ace. The
+value can be either @code{false} or @code{true} or @code{0} or @code{1}.
+
+@strong{Default} @math{false}
+
+@strong{Examples}
+
+@verbatim
+no_insurance = false
+no_insurance = true
+no_insurance = 1
+@end verbatim
+
+@node @code{number_of_burnt_cards =} @math{n}
+@subsection @code{number_of_burnt_cards =} @math{n}
+Indicates the number @math{n} of cards that have to be burnt after
+shuffling a shoe. This value only makes sense when playing shoe games,
+i.e.@ non-zero @code{decks}.
+
+@strong{Default} @math{0}
+
+@strong{Examples}
+
+@verbatim
+number_of_burnt_cards = 0
+number_of_burnt_cards = 1
+number_of_burnt_cards = 2
+@end verbatim
+
+@node @code{penetration =} @math{r}
+@subsection @code{penetration =} @math{r}
+When playing a shoe game, sets the penetration of the shoe. That is to
+say, the fraction $0 < @math{r} < 1$ of the total number of cards on the
+decks that have to be played before re-shuffling the shoe. If the
+penetration is achieved in the middle of a hand (i.e.@ the cut card is
+dealt), the hand is finished and the shoe is shuffled before the next
+hand. Note that if the penetration is too large
+(i.e.@ @math{r lesssim 1}) the shoe might run out of cards triggering an
+error and exiting the program
+
+@strong{Default} @code{0.75}
+
+@strong{Examples}
+
+@verbatim
+penetration = 0.75
+penetration = 0.5
+penetration = 0.85
+@end verbatim
+
+@node @code{penetration_sigma =} @math{r}
+@subsection @code{penetration_sigma =} @math{r}
+If @math{r \neq 0} then the penetration given in @code{penetration} is
+not deterministic but random. That is to say, the actual penetration
+fraction will be sampled from a gaussian random number generator after
+shuffling the shoe. This variable @code{penetration_sigma} controls the
+standard deviation of the distribution.
+
+@strong{Default} @code{0}
+
+@strong{Examples}
+
+@verbatim
+penetration_sigma = 0.01
+penetration_sigma = 0.05
+penetration_sigma = 0.1
+@end verbatim
+
+@node @code{player =} @emph{player}
+@subsection @code{player =} @emph{player}
+Defines which player will be playing against the dealer. Currently, the
+only valid choices are
+
+@itemize
+@item
+@code{tty}: the game starts in an interactive mode where the dealer's
+messages and dealt cards are printed in the terminal, and the user is
+asked to issue her commands through the keyboard. This player is usually
+used to test if the configuration settings (i.e.@ @code{enhc} or
+@code{cards_file}) work as expected, although it can be used to just
+play ASCII blackjack.
+@item
+@code{stdio}: the dealer writes messages into the standard output and
+reads back commands from the standard input. With proper redirection
+(and possibly FIFO devices), this option can be used to have an ad-hoc
+player to programatically play blackjack. See [@@sec-players] for
+examples.
+@item
+@code{internal}: the dealer plays against an internal player already
+programmed in Libre@ Blackjack that bets flat, never takes insurance and
+follows the basic strategy. The strategy can be changed by setting the
+configuration variable @code{strategy_file}. This player is chosen if
+@code{-i} is passed in the command line.
+@end itemize
+
+@strong{Default} If neither the standard input nor output of the
+executable @code{blackjack} is re-directed, the default is @code{tty}.
+If at least one of them is re-directed or piped, the default is
+@code{stdio}.
+
+@strong{Examples}
+
+@verbatim
+player = tty
+player = stdio
+player = internal
+@end verbatim
+
+@node @code{quit_when_arranged_cards_run_out =} @math{b}
+@subsection @code{quit_when_arranged_cards_run_out =} @math{b}
+If the are arranged cards (either with @code{cards} or
+@code{cards_file}) and @math{b} is @code{true} then the program quits
+when the list of cards ends. If it is false, the dealer continues
+drawing cards from a randomnly-shuffled shoe (where the first cards have
+been arranged) or from an infinite set of random cards, depending on the
+value of @code{decks} until the either dealer receives a @code{quit}
+message or the maximum number of hands given in @code{hands} have been
+played. This setting only makes sense when arranging cards with either
+@code{cards} or @code{cards_file}.
+
+@strong{Default} @code{false}
+
+@strong{Examples}
+
+@verbatim
+quit_when_arranged_cards_run_out = false
+quit_when_arranged_cards_run_out = true
+@end verbatim
+
+@node @code{resplits =} @math{n}
+@subsection @code{resplits =} @math{n}
+Sets the maximum number of re-split hands. Default is three, meaning the
+dealer allows the player to play up to four hands.
+
+@strong{Default} @math{3}
+
+@strong{Examples}
+
+@verbatim
+resplits = 1
+resplits = 8
+@end verbatim
+
+@node @code{rng_seed =} @math{n}
+@subsection @code{rng_seed =} @math{n}
+This option sets the seed of the random number generator used by the
+dealer to draw cards. This is used to get deterministic results. That is
+to say, the cards draw by two dealers using the same seed (and the same
+number of decks) will be the same. It is not possible to guess what the
+cards will be given a certain seed@ @math{n}. But the cards will be the
+same for two executions of the program with the same seed@ @math{n}. If
+this option is not set, the seed itself is as random as possible.
+
+@strong{Default} Entropic non-deterministic random seed from C++'s
+@code{std::random_device} (most likely @code{/dev/random}).
+
+@strong{Examples}
+
+@verbatim
+rng_seed = 1
+rng_seed = 123456
+@end verbatim
+
+@node @code{rules = [ ahc | enhc ] [ h17 | s17 ] [ das | ndas ] [ doa | do9 ]}
+@subsection @code{rules = [ ahc | enhc ] [ h17 | s17 ] [ das | ndas ] [ doa | do9 ]}
+Defines the rules of the game.
+
+@multitable {Player can double on any first two cards} {@code{doa}} {@code{ndas}} 
+@headitem 
+Rule
+ @tab Yes
+ @tab No
+@item 
+Dealer peeks for blackjack
+ @tab @code{ahc}
+ @tab @code{enhc}
+@item 
+Dealer has to hit a soft 17
+ @tab @code{h17}
+ @tab @code{s17}
+@item 
+Player can double after splitting
+ @tab @code{das}
+ @tab @code{ndas}
+@item 
+Player can double on any first two cards
+ @tab @code{doa}
+ @tab @code{do9}
+@end multitable
+
+@itemize
+@item
+When playing @code{ahc} (default), the dealer has a hole card. If the
+upcard is an ace, he checks for possible blackjack before allowing for
+the player to split nor double down. When playing @code{enhc} the dealer
+does not draw a hole card and check for blackjack after the player has
+played.
+@item
+The @code{do9} rules means that the player can only double if the first
+two cards sum up nine, ter or eleven.
+@end itemize
+
+@strong{Default} Empty, meaning @code{ahc}, @code{h17}, @code{das},
+@code{doa}.
+
+@strong{Examples}
+
+@verbatim
+rules = ahc h17 das doa
+rules = enhc s17 ndas
+rules = s17 do9
+@end verbatim
+
+@node @code{shuffle_every_hand =} @math{b}
+@subsection @code{shuffle_every_hand =} @math{b}
+Defines whether the dealer has to re-shuffle the shoe after finishing a
+hand or not. If @math{b} is @code{true}, each hand starts from a fresh
+shoe of size @code{decks}. If @math{b} is @code{false}, the shoe is only
+re-shuffled when the fraction given in @code{penetration} is achieved.
+This setting only makes sense when playing a shoe game, i.e.@ non-zero
+@code{decks}.
+
+@strong{Default} @code{false}
+
+@strong{Examples}
+
+@verbatim
+shuffle_every_hand = false
+shuffle_every_hand = true
+@end verbatim
+
+@node Internal players
+@chapter Internal players
+TBD
+
+@node Examples
+@chapter Examples
+The directory @code{players} contains a few examples of automated
+players, which are discussed in the following sections.
+
+@node Communication mechanisms
+@chapter Communication mechanisms
+
+@menu
+* Standard input & output::
+* FIFOs::
+* Message queues::
+@end menu
+
+@node Standard input & output
+@section Standard input & output
+
+@node FIFOs
+@section FIFOs
+
+@node Message queues
+@section Message queues
+
+@node Tests
+@chapter Tests
+
+@node Statistical utilities
+@chapter Statistical utilities
+
+@node Installation
+@chapter Installation
+
+@menu
+* From binaries::
+* From sources::
+@end menu
+
+@node From binaries
+@section From binaries
+
+@node From sources
+@section From sources
+
+@menu
+* Tarball::
+* Git repository::
+@end menu
+
+@node Tarball
+@subsection Tarball
+
+@node Git repository
+@subsection Git repository
+
+@bye

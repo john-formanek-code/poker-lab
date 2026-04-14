@@ -1,0 +1,87 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.pytest_cache/
+pytest.ini
+
+# Environments
+.venv
+venv/
+ENV/
+env/
+interface/
+
+# C++ Build artifacts (Autotools/Make)
+*.o
+*.obj
+*.lo
+*.la
+*.al
+.libs/
+.deps/
+Makefile.in
+aclocal.m4
+autom4te.cache/
+config.guess
+config.h.in
+config.sub
+configure
+depcomp
+install-sh
+ltmain.sh
+missing
+stamp-h1
+libtool
+config.log
+config.status
+engines/blackjack/blackjack
+
+# Project specific
+log/
+*.log
+config.ini
+!engines/poker/config.ini
