@@ -1,7 +1,6 @@
 import os
 import sys
-import platform
-from PySide6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, 
+from PySide6.QtWidgets import (QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
                              QListWidget, QStackedWidget, QLabel, QFrame, QSplitter, QPushButton, QGridLayout)
 from PySide6.QtCore import Qt
 from common.styles import DARK_THEME
@@ -78,28 +77,26 @@ class DashboardWidget(QWidget):
         grid = QGridLayout()
         grid.setSpacing(20)
         
-        # Panel 1: System Telemetry
-        sys_info = {
-            "OS": platform.system().upper(),
-            "KERNEL": platform.release(),
-            "PYTHON": sys.version.split()[0],
-            "ARCH": platform.machine(),
-            "VENV": "ACTIVE" if hasattr(sys, 'real_prefix') or (sys.base_prefix != sys.prefix) else "GLOBAL"
+        # Panel 1: Project Info
+        project_info = {
+            "VERSION": "0.1.0",
+            "LICENSE": "GPLv3",
+            "BUILD": "STABLE",
+            "UI": "PySide6"
         }
-        grid.addWidget(InfoPanel("SYSTEM TELEMETRY", sys_info), 0, 0)
-        
-        # Panel 2: Engine Diagnostics
+        grid.addWidget(InfoPanel("PROJECT", project_info), 0, 0)
+
+        # Panel 2: Engine Status
         PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         bj_path = os.path.join(PROJECT_ROOT, "engines", "blackjack", "blackjack")
-        
+
         eng_info = {
-            "BJ_CORE": "READY" if os.path.exists(bj_path) else "MISSING",
-            "POKER_GYM": "REGISTERED",
-            "RENDERER": "QPAINTER_NATIVE",
-            "ACCEL": "CPP_MONTECARLO",
-            "UI_STACK": "PYSIDE6_STEALTH"
+            "BLACKJACK": "READY" if os.path.exists(bj_path) else "MISSING",
+            "POKER": "READY",
+            "MONTE_CARLO": "ENABLED",
+            "STRATEGY": "ACTIVE"
         }
-        grid.addWidget(InfoPanel("ENGINE DIAGNOSTICS", eng_info), 0, 1)
+        grid.addWidget(InfoPanel("ENGINES", eng_info), 0, 1)
         
         main_layout.addLayout(grid)
 
@@ -134,16 +131,6 @@ class DashboardWidget(QWidget):
         
         main_layout.addLayout(modules_layout)
         main_layout.addStretch()
-        
-        # Footer Bar
-        footer = QHBoxLayout()
-        footer.addWidget(QLabel("READY // SESSION_ID: " + os.urandom(4).hex().upper()))
-        footer.addStretch()
-        footer.addWidget(QLabel("INTERNAL_USE_ONLY"))
-        for i in range(footer.count()):
-            w = footer.itemAt(i).widget()
-            if w: w.setStyleSheet("color: #222222; font-size: 10px;")
-        main_layout.addLayout(footer)
 
 class UnifiedWindow(QMainWindow):
     def __init__(self):
