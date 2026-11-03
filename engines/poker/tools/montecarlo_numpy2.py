@@ -2,7 +2,7 @@ import time
 
 import numpy as np
 
-from tools.hand_evaluator import CARD_RANKS_ORIGINAL, SUITS_ORIGINAL
+from ..tools.hand_evaluator import CARD_RANKS_ORIGINAL, SUITS_ORIGINAL
 
 strided = np.lib.stride_tricks.as_strided
 

@@ -3,7 +3,7 @@ Runs a Montecarlo simulation to calculate the probability
 of winning with a certain pokerhand and a given amount of player.
 """
 
-from tools.hand_evaluator import eval_best_hand
+from ..tools.hand_evaluator import eval_best_hand
 
 __author__ = 'Nicolas Dickreuter'
 

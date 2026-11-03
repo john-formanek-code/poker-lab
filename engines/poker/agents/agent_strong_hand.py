@@ -1,7 +1,7 @@
 """Simple deterministic agent that raises on strong hands and folds on weak ones."""
 from typing import Iterable, Sequence
 
-from gym_env.enums import Action
+from ..gym_env.enums import Action
 
 RANK_ORDER = "23456789TJQKA"
 HIGH_THRESHOLD = RANK_ORDER.index("T")

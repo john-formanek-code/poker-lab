@@ -1,7 +1,7 @@
 """Test numpy based equity calculator"""
 import pytest
 
-from tools.montecarlo_numpy2 import numpy_montecarlo
+from ..tools.montecarlo_numpy2 import numpy_montecarlo
 
 
 def _runner(my_cards, cards_on_table, players, expected_result):

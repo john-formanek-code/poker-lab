@@ -7,11 +7,11 @@ import pandas as pd
 from gym import Env
 from gym.spaces import Box, Discrete
 
-from gym_env.cycle import PlayerCycle
-from gym_env.enums import Action, Stage
-from gym_env.rendering import PygletWindow, WHITE, RED, GREEN, BLUE
-from tools.hand_evaluator import get_winner
-from tools.helper import flatten
+from ..gym_env.cycle import PlayerCycle
+from ..gym_env.enums import Action, Stage
+from ..gym_env.rendering import PygletWindow, WHITE, RED, GREEN, BLUE
+from ..tools.hand_evaluator import get_winner
+from ..tools.helper import flatten
 
 # pylint: disable=import-outside-toplevel
 
@@ -85,7 +85,7 @@ class HoldemTable(Env):
             calculator = cppimport.imp("tools.montecarlo_cpp.pymontecarlo")
             get_equity = calculator.montecarlo
         else:
-            from tools.montecarlo_python import get_equity
+            from ..tools.montecarlo_python import get_equity
         self.get_equity = get_equity
         self.use_cpp_montecarlo = use_cpp_montecarlo
         self.num_of_players = 0

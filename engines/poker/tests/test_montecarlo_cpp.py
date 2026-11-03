@@ -3,7 +3,7 @@
 # import cppimport
 # import pytest
 #
-# from tools.helper import ON_CI
+# from ..tools.helper import ON_CI
 #
 # calculator = cppimport.imp("tools.montecarlo_cpp.pymontecarlo")
 #

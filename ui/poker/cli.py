@@ -31,7 +31,7 @@ import numpy as np
 import pandas as pd
 from docopt import docopt
 
-from gym_env.env import PlayerShell
+from engines.poker.gym_env.env import PlayerShell
 from tools.helper import get_config
 from tools.helper import init_logger
 

@@ -13,8 +13,12 @@ setup: $(VENV)/bin/activate
 	$(PIP) install -e .
 
 blackjack:
-	@echo "Building Blackjack Engine..."
-	cd engines/blackjack && $(MAKE)
+	@if [ ! -f engines/blackjack/blackjack ]; then \
+		echo "Building Blackjack Engine..."; \
+		cd engines/blackjack && ./configure && $(MAKE); \
+	else \
+		echo "Blackjack Engine already built."; \
+	fi
 
 poker:
 	@echo "Poker Engine (Python-based with on-the-fly C++ compilation) is ready."

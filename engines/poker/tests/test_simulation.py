@@ -3,8 +3,8 @@
 from agents.agent_random import Player as RandomPlayer
 from agents.agent_strong_hand import Player as StrongHandPlayer
 from agents.agent_pro import Player as ProPlayer
-from gym_env.env import HoldemTable
-from gym_env.enums import Action
+from ..gym_env.env import HoldemTable
+from ..gym_env.enums import Action
 
 
 def _setup_env(*players, max_hands=None):

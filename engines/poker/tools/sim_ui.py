@@ -12,7 +12,7 @@ from tkinter.scrolledtext import ScrolledText
 from agents.agent_random import Player as RandomPlayer
 from agents.agent_strong_hand import Player as StrongHandPlayer
 from agents.agent_pro import Player as ProPlayer
-from gym_env.env import HoldemTable
+from ..gym_env.env import HoldemTable
 
 AGENT_TYPES = {
     "Random": RandomPlayer,

@@ -195,3 +195,7 @@ class UnifiedWindow(QMainWindow):
         if hasattr(self.poker_widget, 'timer'):
             self.poker_widget.timer.stop()
         event.accept()
+
+
+# Alias for compatibility
+UnifiedGamingWindow = UnifiedWindow

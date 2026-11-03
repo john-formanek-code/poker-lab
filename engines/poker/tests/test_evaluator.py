@@ -1,7 +1,7 @@
 """Test Hand evaluation."""
 import logging
 
-from tools.hand_evaluator import eval_best_hand
+from ..tools.hand_evaluator import eval_best_hand
 
 log = logging.getLogger(__name__)
 

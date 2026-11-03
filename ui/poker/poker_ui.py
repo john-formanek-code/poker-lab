@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushB
                              QComboBox, QSlider, QSpinBox, QFrame, QGroupBox, QScrollArea)
 from PySide6.QtCore import Qt, QTimer, Slot
 from .poker_view import PokerView
-from gym_env.env import PlayerShell
+from engines.poker.gym_env.env import PlayerShell
 
 class SeatConfigWidget(QGroupBox):
     def __init__(self, seat_index):
@@ -186,7 +186,7 @@ class PokerWidget(QWidget):
                 action = raw_env.current_player.agent_obj.action(
                     raw_env.legal_moves, raw_env.observation, raw_env.info)
                 
-                from gym_env.enums import Action
+                from engines.poker.gym_env.enums import Action
                 if Action(action) not in raw_env.legal_moves:
                     raw_env._illegal_move(action)
                 else:

@@ -1,6 +1,6 @@
 """Pro player strategy with advanced heuristics."""
 
-from gym_env.enums import Action
+from ..gym_env.enums import Action
 
 class Player:
     """Advanced heuristic player evaluating equity and pot odds."""

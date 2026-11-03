@@ -1,9 +1,9 @@
 """Tests for the gym environment"""
 import pytest
 
-from gym_env.cycle import PlayerCycle
-from gym_env.enums import Action, Stage
-from gym_env.env import HoldemTable
+from ..gym_env.cycle import PlayerCycle
+from ..gym_env.enums import Action, Stage
+from ..gym_env.env import HoldemTable
 
 
 def _create_env(n_players,
