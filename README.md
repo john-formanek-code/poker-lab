@@ -1,12 +1,17 @@
 # Unified Card Games Stack
 
-This repository unifies multiple card game engines into a single, cohesive stack.
+A unified platform integrating Blackjack and Poker engines with a modern PySide6 UI.
+
+This project combines:
+- **Libre Blackjack** (C++ backend by Jeremy Theler) - High-speed Blackjack engine
+- **Neuron Poker** (OpenAI Gym by Dick Reuter) - Texas Hold'em poker environment
+- Custom PySide6 UI for unified gameplay experience
 
 ## Architecture
 
 - **`engines/`**: High-performance game engines.
-  - `blackjack/`: C++ backend with strategy support.
-  - `poker/`: Gym-based Poker environment (Hold'em).
+  - `blackjack/`: C++ backend with strategy support (Libre Blackjack).
+  - `poker/`: Gym-based Poker environment (Hold'em) (Neuron Poker).
 - **`ui/`**: Unified PySide6 User Interface.
   - `unified_window.py`: Main application container with sidebar navigation.
   - `blackjack/`: Specialized widgets for Blackjack table and controls.
@@ -41,10 +46,19 @@ make run
 ## Engines Detail
 
 ### Blackjack Engine
-The Blackjack engine is a high-speed C++ implementation supporting multiple decks, various house rules, and advanced strategy evaluation.
+The Blackjack engine is a high-speed C++ implementation supporting multiple decks, various house rules, and advanced strategy evaluation. Based on Libre Blackjack.
 
 ### Poker Engine
-The Poker engine is an OpenAI Gym compatible environment for training and testing Poker agents, featuring high-speed Monte Carlo simulations (Python/C++).
+The Poker engine is an OpenAI Gym compatible environment for training and testing Poker agents, featuring high-speed Monte Carlo simulations (Python/C++). Based on Neuron Poker.
 
----
-*Unified by Gemini CLI*
+## License
+
+This project is licensed under **GNU General Public License v3** (GPLv3). See [LICENSE](LICENSE) for details.
+
+For attribution information, see [CONTRIBUTORS.md](CONTRIBUTORS.md).
+
+## Attribution
+
+- **Blackjack**: Built on [Libre Blackjack](https://github.com/seamplex/blackjack) by Jeremy Theler
+- **Poker**: Built on [Neuron Poker](https://github.com/dickreuter/neuron_poker) by Dick Reuter
+- **UI Integration**: Jan Formánek
